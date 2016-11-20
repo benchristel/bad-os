@@ -1,0 +1,7 @@
+{
+  "commands": [
+    "* : ./build.sh",
+    "src/* : ./build.sh",
+    "spec/* : ./build.sh"
+  ]
+}

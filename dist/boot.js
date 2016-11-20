@@ -1,3 +1,16 @@
+function BufferView(buffer) {
+  var view = {}
+
+  view.getLines = function() {
+    return buffer.getLines().map(addCursorPrefix)
+  }
+
+  function addCursorPrefix(line) {
+    return '* ' + line
+  }
+
+  return view
+}
 var Editor = {}
 
 Editor.Buffer = function(text) {
@@ -39,13 +52,19 @@ Editor.Buffer = function(text) {
     lines = lines.slice(0, y).concat(['']).concat(lines.slice(y))
   }
 
+  buffer.deleteLine = function() {
+    lines = lines.slice(0, y).concat(lines.slice(y + 1))
+    if (y >= lines.length) {
+      y = lines.length - 1
+    }
+  }
+
   buffer.getLines = function() {
     return lines
   }
 
   return buffer
 }
-
 var buffer = Editor.Buffer()
 var mode = 'normal'
 var fileToEdit = 'README.md'
@@ -74,6 +93,9 @@ function handleKeypressInNormalMode(key) {
       break
     case 'o':
       buffer.openLine()
+      break
+    case 'x':
+      buffer.deleteLine()
       break
     case 's':
       C680.writeFile(fileToEdit, buffer.getLines().join('\n'))
@@ -117,8 +139,10 @@ function nearCursor(buf) {
 }
 
 function viewLine(buf) {
-  return function(line, i) {
+  return function(line, i, lines) {
     var isLineAtCursor = buf.getCursorY() === i
+
+    return firstChar() + secondChar()
 
     if (mode === 'normal') {
       if (isLineAtCursor) {
@@ -132,6 +156,12 @@ function viewLine(buf) {
       } else {
         return '  ' + line
       }
+    }
+  }
+
+  function firstChar(line, i, buf) {
+    if (i === buf.getCursorY()) {
+      
     }
   }
 }
