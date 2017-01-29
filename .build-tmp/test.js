@@ -153,64 +153,82 @@ var KeyboardController = function(emit) {
     deadKeySequence = ''
   }
 }
-var buffer = ''
-
-var keyboardController = KeyboardController(function(char, signal) {
-  if (char) buffer += char
-
-  if (signal === 'backspace') {
-    buffer = buffer.slice(0, buffer.length - 1)
-  }
-
-  render()
+describe('KeyboardController', function() {
+  it('throws if not given a function', function() {
+    expect(function() {
+      KeyboardController()
+    }).toThrow('KeyboardController must be initialized with a function to which characters will be emitted')
+  })
 })
 
-C680.onKeyDown(keyboardController.keyDown)
-C680.onKeyUp(keyboardController.keyUp)
+describe('KeyboardController', function() {
+  var buffer
+  var signal
+  var controller
 
-function render() {
-  C680.render(('> ' + buffer + '_').split('\n'))
-}
+  beforeEach(function() {
+    buffer = ''
+    signal = null
+    controller = KeyboardController(function(emitted, _signal) {
+      buffer += emitted
+      signal = _signal
+    })
+  })
 
-C680.render([
-  '',
-  '',
-  '',
-  '',
-  '  ------------------------------------------------------------',
-  '',
-  toBlockDrawing('  ###########                    #   ##########    ###########'),
-  toBlockDrawing('    ____    ##                  ##  ##        ##  ##'),
-  toBlockDrawing('    ####    ##                  ##  ##  ####  ##  ##'),
-  toBlockDrawing('    ^^^^    ##  #######         ##  ##        ##  ##'),
-  toBlockDrawing('  ##########          ##   #######  ##        ##   #########'),
-  toBlockDrawing('    ____    ##   #######  ##    ##  ##        ##           ##'),
-  toBlockDrawing('    ####    ##  ##    ##  ##    ##  ##  ####  ##           ##'),
-  toBlockDrawing('    ^^^^    ##  ##    ##  ##    ##  ##        ##           ##'),
-  toBlockDrawing('  ###########    ######^#  #######   ##########  ########### '),
-  '',
-  '  ------------------------------------------------------------',
-  '',
-  '                 Press any key to continue.'
-])
+  it('does not emit anything when no keys are pressed', function() {
+    expect(buffer).toEqual('')
+    expect(signal).toEqual(null)
+  })
 
-function toBlockDrawing(s) {
-  if (!s) {
-    return ''
-  }
+  it('translates key codes into characters', function() {
+    controller.keyDown(65)
+    expect(buffer).toEqual('a')
+  })
 
-  if (s.length === 1) {
-    switch(s) {
-      case '#':
-        return '\u2588' // full block
-      case '_':
-        return '\u2584' // lower half block
-      case '^':
-        return '\u2580' // upper half block
-      default:
-        return s
-    }
-  }
+  it('does not emit a signal when a character key is typed', function() {
+    controller.keyDown(65)
+    expect(signal).toEqual(null)
+  })
 
-  return s.split('').map(toBlockDrawing).join('')
-}
+  it('capitalizes letters when the shift key is held', function() {
+    controller.keyDown(16)
+    controller.keyDown(65)
+    expect(buffer).toEqual('A')
+  })
+
+  it('does not capitalize letters when the shift key is released', function() {
+    controller.keyDown(16)
+    controller.keyUp(16)
+    controller.keyDown(65)
+    expect(buffer).toEqual('a')
+  })
+
+  it('emits a signal when backspace is pressed', function() {
+    controller.keyDown(8)
+    expect(signal).toEqual('backspace')
+    expect(buffer).toEqual('')
+  })
+
+  it('emits a signal when shift+return is pressed', function() {
+    controller.keyDown(16)
+    controller.keyDown(13)
+    expect(signal).toEqual('shift-return')
+    expect(buffer).toEqual('')
+  })
+
+  it('emits accented characters typed with backtick escape codes', function() {
+    controller.keyDown(192)
+    controller.keyDown(69)
+    controller.keyDown(65)
+    expect(buffer).toEqual('á')
+  })
+
+  it('gets out of backtick escape mode when backtick is pressed again', function() {
+    controller.keyDown(192)
+    controller.keyDown(69)
+    controller.keyDown(192)
+    expect(buffer).toEqual('')
+    controller.keyDown(69)
+    expect(buffer).toEqual('e')
+  })
+})
