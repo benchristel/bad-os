@@ -3,14 +3,8 @@
 BadOS is an operating system for the
 [Computron 680](https://github.com/benchristel/computron-680).
 
-Currently, the only thing it does is edit this README file.
-
-## Editor commands
-
-- `j` and `k` navigate up and down
-- `o` opens a new line above the cursor
-- `return` enters or exits edit mode
-- `s` saves
+It is currently in a very embryonic state, but you can still play around with
+it and extend it for your own purposes.
 
 ## Installation
 
